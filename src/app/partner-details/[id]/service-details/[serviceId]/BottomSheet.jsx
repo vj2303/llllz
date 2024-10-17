@@ -13,7 +13,12 @@ const BottomSheet = ({ isOpen, onClose, service }) => {
             &#10005;
           </button>
         </div>
-        <p className="text-gray-500 mb-2 bg-white p-2 rounded-xl">{service.one_line_description}</p>
+        {service.one_line_description && (
+          <p className="text-gray-500 mb-2 bg-white p-2 rounded-xl">
+            {service.one_line_description}
+          </p>
+        )}
+
         <div className="mb-4 bg-white p-2 rounded-xl">
         <div className='flex justify-between items-center'>
           <div>
