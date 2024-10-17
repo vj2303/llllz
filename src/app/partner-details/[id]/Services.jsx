@@ -22,8 +22,8 @@ const ServicesSection = ({ services }) => {
             <Image
               src={service.image_url}
               alt={service.name}
-              width={160} // Fixed width in pixels
-              height={160} // Fixed height in pixels
+              width={100} // Fixed width in pixels
+              height={100} // Fixed height in pixels
               className="rounded-lg mx-auto"
             />
             <p className="text-[14px] sm:text-[18px] mt-2">{service.name}</p>
