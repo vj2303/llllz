@@ -1,6 +1,6 @@
 'use client'
-import { Baby, ChevronDown, ChevronUp, Plus, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronDown, ChevronUp, Plus, Search } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
 import BottomSheet from "./BottomSheet";
 import { useParams } from "next/navigation";
 import axios from "axios";
@@ -15,32 +15,45 @@ const MainContent = () => {
   const { id, serviceId } = useParams();
   const [isDesktop, setIsDesktop] = useState(false);
 
+  // Detect screen width and adjust openIndex on desktop
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
         setIsDesktop(true);
-        setOpenIndex(0); // Open first dropdown by default on desktop
+        setOpenIndex(0); // Open the first dropdown by default on desktop
       } else {
         setIsDesktop(false);
         setOpenIndex(null); // Reset for mobile
       }
     };
-    handleResize(); 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const toggleDropdown = (index) => {
-    setOpenIndex((prevIndex) => (prevIndex === index ? null : index));
-  };
+  // Memoized toggle function to avoid unnecessary re-renders
+  const toggleDropdown = useCallback(
+    (index) => {
+      setOpenIndex((prevIndex) => (prevIndex === index ? null : index));
+    },
+    [] // Dependencies
+  );
 
+  // Fetch services data
   const fetchServices = async () => {
     setLoading(true);
     try {
-      const res = await axios.post(`${process.env.NEXT_PUBLIC_HOST}/api/v1/salon/subCategories`, {
-        main_category_id: serviceId.split("-").pop(),
-        salon_id: id.split("-").pop()
-      });
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_HOST}/api/v1/salon/subCategories`,
+        {},
+        {
+          params: {
+            main_category_id: serviceId.split("-").pop(),
+            salon_id: id.split("-").pop(),
+          },
+        }
+      );
       setServices(res.data.data.sub_categories);
     } catch (error) {
       console.error(error);
@@ -62,14 +75,13 @@ const MainContent = () => {
         ))
       ) : (
         <div className="mt-4 bg-white">
+          {/* Search Input */}
           <div className="border mx-2 flex items-center rounded-md p-2">
             <Search size={15} className="mr-2" />
-            <input
-              type="text"
-              placeholder="Search for service..."
-              className="focus:outline-none"
-            />
+            <input type="text" placeholder="Search for service..." className="focus:outline-none" />
           </div>
+
+          {/* Gender Buttons */}
           <div className="flex mt-1 mx-2 sm:justify-start justify-between gap-2">
             <button className="border rounded-md px-10 flex items-center gap-2">
               <Image src="/Men.svg" alt="img" width={12} height={12} /> Men
@@ -79,12 +91,11 @@ const MainContent = () => {
             </button>
           </div>
 
+          {/* Services List */}
           <div>
-            {services?.map((service, index) => (
-              <div
-                key={index}
-                className="border-b-4 border-b-gray-200"
-              >
+            {services.map((service, index) => (
+              <div key={index} className="border-b-4 border-b-gray-200">
+                {/* Dropdown Header */}
                 <div
                   className="flex justify-between items-center p-2 cursor-pointer"
                   onClick={() => toggleDropdown(index)}
@@ -93,10 +104,10 @@ const MainContent = () => {
                   {openIndex === index ? <ChevronUp /> : <ChevronDown />}
                 </div>
 
-                {/* Smooth dropdown content */}
+                {/* Dropdown Content */}
                 <div
                   className={`transition-all duration-300 overflow-hidden ${
-                    openIndex === index ? 'max-h-screen' : 'max-h-0'
+                    openIndex === index ? "max-h-screen" : "max-h-0"
                   }`}
                 >
                   {service.services?.map((ele, i) => (
@@ -119,22 +130,15 @@ const MainContent = () => {
                         />
                         <p className="font-medium">{ele.name}</p>
                         {ele.one_line_description && (
-                          <p className="text-[11px] text-gray-400">
-                            {ele.one_line_description}
-                          </p>
+                          <p className="text-[11px] text-gray-400">{ele.one_line_description}</p>
                         )}
                         {ele.display_rate && (
-                          <p className="text-[11px]">
-                            From ₹ {Math.round(ele.display_rate)} + GST
-                          </p>
+                          <p className="text-[11px]">From ₹ {Math.round(ele.display_rate)} + GST</p>
                         )}
                       </div>
                       <button
                         className="text-blue-200 font-semibold border shadow-md rounded-md px-2 flex gap-1"
-                        onClick={() =>
-                          ele.customizations?.length > 0 &&
-                          setSelectedServiceId(ele.id)
-                        }
+                        onClick={() => ele.customizations?.length > 0 && setSelectedServiceId(ele.id)}
                       >
                         ADD {ele.customizations?.length > 0 && <Plus />}
                       </button>
